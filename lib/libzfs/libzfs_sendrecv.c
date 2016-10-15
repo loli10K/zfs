@@ -815,13 +815,8 @@ send_iterate_fs(zfs_handle_t *zhp, void *arg)
 		sd->tosnap_txg = tosnap_txg;
 
 	/*
-	 * on the send side, if the current dataset does not have tosnap,
-	 * perform two additional checks:
-	 *
-	 * - skip sending the current dataset if it was created later than
-	 *   the parent tosnap
-	 * - return error if the current dataset was created earlier than
-	 *   the parent tosnap
+	 * on the send side, if the current dataset does not have tosnap and
+	 * it was created later than the parent tosnap skip sending it
 	 */
 	if (sd->tosnap != NULL && tosnap_txg == 0) {
 		if (sd->tosnap_txg != 0 && txg > sd->tosnap_txg) {
@@ -830,15 +825,8 @@ send_iterate_fs(zfs_handle_t *zhp, void *arg)
 				    "skipping dataset %s: snapshot %s does "
 				    "not exist\n"), zhp->zfs_name, sd->tosnap);
 			}
-		} else {
-			(void) fprintf(stderr, dgettext(TEXT_DOMAIN,
-			    "cannot send %s@%s%s: snapshot %s@%s does not "
-			    "exist\n"), sd->fsname, sd->tosnap, sd->recursive ?
-			    dgettext(TEXT_DOMAIN, " recursively") : "",
-			    zhp->zfs_name, sd->tosnap);
-			rv = -1;
+			goto out;
 		}
-		goto out;
 	}
 
 	VERIFY(0 == nvlist_alloc(&nvfs, NV_UNIQUE_NAME, 0));

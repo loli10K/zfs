@@ -43,6 +43,7 @@ verify_runnable "global"
 function cleanup
 {
 	log_must zinject -c all
+	log_must zpool clear $TESTPOOL1
 	destroy_pool $TESTPOOL1
 	rm -f $TESTDIR/file.*
 }
